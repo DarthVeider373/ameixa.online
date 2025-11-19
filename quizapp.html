@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quiz do Intestino Saudável</title>
+<style>
+  :root {
+    --bg: #fff7fb;
+    --card: #ffffff;
+    --primary: #ff4f93;
+    --primary-soft: #ffb7d5;
+    --primary-soft-2: #ffe0ef;
+    --text-main: #442230;
+    --text-muted: #8a6274;
+    --shadow: 0 14px 40px rgba(0,0,0,0.08);
+    --radius-lg: 24px;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    background: radial-gradient(circle at top, #ffe6f2 0, #fff7fb 35%, #ffffff 100%);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+  }
+
+  .quiz-shell {
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .brand-tag {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .brand-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--primary);
+  }
+
+  .quiz-container {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 20px 18px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .quiz-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top right, rgba(255,183,213,0.35) 0, transparent 55%);
+    pointer-events: none;
+  }
+
+  h1 {
+    font-size: 1.35rem;
+    color: var(--text-main);
+    margin-bottom: 4px;
+    font-weight: 700;
+  }
+
+  .subtitle {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+  }
+
+  .progress-wrap {
+    margin-bottom: 16px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #fce7f1;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .progress-inner {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff9cc7, #ff4f93);
+    border-radius: inherit;
+    transition: width 0.35s ease;
+  }
+
+  .question-card {
+    position: relative;
+    padding: 10px 0 4px;
+    min-height: 90px;
+  }
+
+  .step-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+
+  .step-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text-main);
+    animation: fadeUp 0.4s ease;
+  }
+
+  .options {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 999px;
+    border: none;
+    background: var(--primary-soft-2);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+  }
+
+  .btn span {
+    position: relative;
+    z-index: 2;
+  }
+
+  .btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255,79,147,0.16) 0, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(255, 152, 190, 0.45);
+    background: #ffe4f1;
+  }
+
+  .btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  .btn:hover::before {
+    opacity: 1;
+  }
+
+  #final-btn {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  #final-btn:hover {
+    background: #ff2d7a;
+  }
+
+  .final-text {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    line-height: 1.45;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fff3f8;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+
+  .pill-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .quiz-container {
+      padding: 18px 16px 20px;
+      border-radius: 18px;
+    }
+    h1 {
+      font-size: 1.22rem;
+    }
+    .step-text {
+      font-size: 1rem;
+    }
+    .btn {
+      font-size: 0.9rem;
+      padding: 11px 12px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="quiz-shell">
+    <div class="brand-tag">
+      <div class="brand-dot"></div>
+      AMEIXA • CUIDADO FEMININO
+    </div>
+
+    <div class="quiz-container">
+      <h1>Quiz do Intestino Saudável ✨</h1>
+      <p class="subtitle">Responda em menos de 60 segundos e descubra se o seu intestino está pedindo socorro silencioso.</p>
+
+      <div class="progress-wrap">
+        <div class="progress-header">
+          <span id="progress-label">Pergunta 1 de 20</span>
+          <span id="progress-percent">5%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-inner" id="progress-inner"></div>
+        </div>
+      </div>
+
+      <div class="question-card">
+        <div class="step-label" id="step-label">SUA ROTINA INTESTINAL</div>
+        <p id="question" class="step-text"></p>
+      </div>
+
+      <div id="options" class="options"></div>
+    </div>
+  </div>
+
+<script>
+  const steps = [
+    {
+      tag: "SUA ROTINA INTESTINAL",
+      text: "Você costuma sentir inchaço abdominal ao longo do dia?",
+      options: [
+        "Sim, quase todos os dias",
+        "Às vezes, principalmente à noite",
+        "Raramente ou nunca"
+      ]
+    },
+    {
+      tag: "FREQUÊNCIA NO BANHEIRO",
+      text: "Com que frequência você costuma evacuar?",
+      options: [
+        "Uma vez a cada 2 ou 3 dias",
+        "Uma vez por dia",
+        "Mais de uma vez por dia"
+      ]
+    },
+    {
+      tag: "SENSAÇÃO APÓS EVACUAR",
+      text: "Depois de ir ao banheiro, você sente que esvaziou completamente o intestino?",
+      options: [
+        "Não, parece que sempre fica algo preso",
+        "Às vezes sinto isso",
+        "Sim, normalmente fico aliviada"
+      ]
+    },
+    {
+      tag: "CONSTIPAÇÃO",
+      text: "Você já ficou mais de 3 dias sem conseguir evacuar?",
+      options: [
+        "Sim, várias vezes",
+        "Uma ou duas vezes só",
+        "Nunca aconteceu"
+      ]
+    },
+    {
+      tag: "GASES E DESCONFORTO",
+      text: "Você sente muitos gases e estufamento após comer?",
+      options: [
+        "Sim, quase sempre",
+        "Depende do que eu como",
+        "Não, é raro"
+      ]
+    },
+    {
+      tag: "SINTOMAS DIGESTIVOS",
+      text: "Você costuma sentir dor ou cólicas abdominais sem explicação clara?",
+      options: [
+        "Sim, com frequência",
+        "Às vezes",
+        "Quase nunca"
+      ]
+    },
+    {
+      tag: "ENERGIA E DISPOSIÇÃO",
+      text: "Mesmo dormindo bem, você se sente cansada e sem energia?",
+      options: [
+        "Sim, quase sempre",
+        "Alguns dias da semana",
+        "Não, tenho boa disposição"
+      ]
+    },
+    {
+      tag: "BARRIGA",
+      text: "Sua barriga costuma ficar mais dura e estufada ao longo do dia?",
+      options: [
+        "Sim, noto isso sempre",
+        "Só em dias específicos",
+        "Não percebo diferença"
+      ]
+    },
+    {
+      tag: "DOCES",
+      text: "Você sente vontade quase irresistível de comer doces?",
+      options: [
+        "Sim, todos os dias",
+        "Às vezes, principalmente à noite",
+        "Não, é bem controlado"
+      ]
+    },
+    {
+      tag: "REFLUXO",
+      text: "Você sente queimação, refluxo ou sensação de comida voltando?",
+      options: [
+        "Sim, com frequência",
+        "De vez em quando",
+        "Quase nunca"
+      ]
+    },
+    {
+      tag: "HUMOR",
+      text: "Seu humor oscila muito ao longo do dia, sem um motivo aparente?",
+      options: [
+        "Sim, me identifico muito",
+        "Um pouco, às vezes",
+        "Não, meu humor é estável"
+      ]
+    },
+    {
+      tag: "LAXANTES",
+      text: "Você já usou laxantes para conseguir ir ao banheiro?",
+      options: [
+        "Sim, uso com certa frequência",
+        "Já usei algumas vezes",
+        "Nunca usei"
+      ]
+    },
+    {
+      tag: "DIGESTÃO",
+      text: "Você sente que sua digestão é lenta e pesada?",
+      options: [
+        "Sim, quase todas as refeições",
+        "Às vezes, quando exagero",
+        "Não, minha digestão é boa"
+      ]
+    },
+    {
+      tag: "ROUPAS",
+      text: "Você evita usar roupas justas por causa do inchaço na barriga?",
+      options: [
+        "Sim, quase sempre",
+        "Às vezes",
+        "Não, isso não me incomoda"
+      ]
+    },
+    {
+      tag: "DORES",
+      text: "Você sente dores leves ou pontadas na região abdominal durante a semana?",
+      options: [
+        "Sim, várias vezes",
+        "De vez em quando",
+        "Quase nunca"
+      ]
+    },
+    {
+      tag: "PELE",
+      text: "Você sente sua pele mais opaca, sem brilho ou com acne adulta?",
+      options: [
+        "Sim, está bem assim",
+        "Um pouco, dependendo da fase",
+        "Não, minha pele é estável"
+      ]
+    },
+    {
+      tag: "FREQUÊNCIA",
+      text: "Você passa longos períodos sentindo que " +
+            "seu intestino não funciona como deveria?",
+      options: [
+        "Sim, isso é rotina pra mim",
+        "Às vezes tenho fases assim",
+        "Não, é raro acontecer"
+      ]
+    },
+    {
+      tag: "PÓS-REFEIÇÃO",
+      text: "Mesmo após refeições leves, você sente estufamento ou desconforto?",
+      options: [
+        "Sim, quase sempre",
+        "Só com alguns alimentos",
+        "Não, quase nunca"
+      ]
+    },
+    {
+      tag: "FIBRAS",
+      text: "Você já tentou aumentar fibras e água, mas não viu grande diferença?",
+      options: [
+        "Sim, não resolveu",
+        "Ajudou um pouco",
+        "Nunca tentei de verdade"
+      ]
+    },
+    {
+      tag: "MUDANÇA",
+      text: "Se existisse um protocolo natural, feminino e simples para regular o intestino em poucos dias, você estaria disposta a seguir?",
+      options: [
+        "Sim, eu quero muito isso",
+        "Talvez, se for prático",
+        "No momento não sei"
+      ]
+    }
+  ];
+
+  let current = 0;
+
+  const questionEl = document.getElementById("question");
+  const optionsEl = document.getElementById("options");
+  const stepLabelEl = document.getElementById("step-label");
+  const progressInner = document.getElementById("progress-inner");
+  const progressLabel = document.getElementById("progress-label");
+  const progressPercent = document.getElementById("progress-percent");
+
+  function updateProgress() {
+    const total = steps.length;
+    const step = Math.min(current + 1, total);
+    const percent = Math.round((step / total) * 100);
+    progressInner.style.width = percent + "%";
+    progressLabel.textContent = `Pergunta ${step} de ${total}`;
+    progressPercent.textContent = percent + "%";
+  }
+
+  function loadStep() {
+    if (current < steps.length) {
+      const stepData = steps[current];
+      stepLabelEl.textContent = stepData.tag;
+      questionEl.textContent = stepData.text;
+
+      optionsEl.innerHTML = "";
+      stepData.options.forEach((opt) => {
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.innerHTML = `<span>${opt}</span>`;
+        btn.addEventListener("click", () => next());
+        optionsEl.appendChild(btn);
+      });
+
+      updateProgress();
+    } else {
+      showFinal();
+    }
+  }
+
+  function next() {
+    current++;
+    questionEl.classList.remove("animate");
+    void questionEl.offsetWidth;
+    questionEl.classList.add("animate");
+    loadStep();
+  }
+
+  function showFinal() {
+    progressInner.style.width = "100%";
+    progressLabel.textContent = "Resultado";
+    progressPercent.textContent = "100%";
+
+    stepLabelEl.textContent = "SEU RESULTADO";
+    questionEl.textContent = "Seu intestino está pedindo um cuidado especial feminino.";
+
+    optionsEl.innerHTML = `
+      <div class="pill">
+        <span class="pill-dot"></span>
+        Análise personalizada para rotina feminina
+      </div>
+      <p class="final-text">
+        Pelas suas respostas, é bem provável que o seu intestino esteja sobrecarregado, inflamado ou funcionando abaixo do ideal.
+        Conheça agora o protocolo natural criado especialmente para mulheres que desejam regular o intestino, desinchar a barriga e recuperar a leveza no próprio corpo.
+      </p>
+      <a href="https://pay.kiwify.com.br/JQbJ3rJ" style="text-decoration:none; display:block;">
+        <button id="final-btn" class="btn">
+          <span>Quero ver o protocolo completo agora</span>
+        </button>
+      </a>
+    `;
+  }
+
+  loadStep();
+</script>
+</body>
+</html>
