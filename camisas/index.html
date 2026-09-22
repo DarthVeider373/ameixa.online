@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAMISAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --tinta: #000; --suave: #343434; --fundo: #fff; --gutter: 16px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--fundo); color: var(--tinta); }
+  body { font: 400 16px/24px "IBM Plex Mono", monospace; -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+
+  header { position: fixed; inset: 0 0 auto 0; height: 64px; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 var(--gutter); background: var(--fundo); z-index: 20; }
+  .icone { width: 24px; height: 24px; display: grid; place-items: center; }
+  .filtros { position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 16px; }
+  .filtros button { color: var(--suave); text-transform: uppercase; transition: opacity .2s; }
+  .filtros button[aria-pressed="false"] { opacity: .2; }
+  .contador { position: absolute; font-size: 9px; line-height: 1; top: 10px; margin-left: 1px; }
+
+  main { padding: 64px var(--gutter) 0; }
+  .grade { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: var(--gutter); row-gap: 40px; }
+  .produto { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+  .foto { position: relative; width: 100%; aspect-ratio: 1; }
+  .foto img, .foto svg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+    transform: scale(.72); transition: transform .3s; }
+  .produto:hover .foto img, .produto:hover .foto svg { transform: scale(.76); }
+  .rotulo { text-transform: uppercase; white-space: nowrap; text-align: center; }
+
+  footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 24px;
+    padding: 96px var(--gutter) 32px; text-transform: uppercase; font-size: 12px; }
+
+  /* Painéis (menu, produto, carrinho) */
+  .painel { position: fixed; inset: 0; background: var(--fundo); z-index: 30; display: none; overflow-y: auto; }
+  .painel.aberto { display: block; }
+  .painel .topo { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--gutter); }
+  .menu-links { display: flex; flex-direction: column; gap: 8px; padding: 32px var(--gutter); text-transform: uppercase; }
+
+  .detalhe { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gutter); padding: 0 var(--gutter) 48px; }
+  .detalhe .foto { max-height: calc(100vh - 128px); }
+  .info { display: flex; flex-direction: column; justify-content: center; gap: 24px; max-width: 360px; text-transform: uppercase; }
+  .tamanhos { display: flex; gap: 8px; }
+  .tamanhos button { min-width: 44px; height: 36px; border: 1px solid var(--tinta); }
+  .tamanhos button[aria-pressed="true"] { background: var(--tinta); color: var(--fundo); }
+  .acao { height: 44px; border: 1px solid var(--tinta); text-transform: uppercase; }
+  .acao:hover, .acao:disabled { background: var(--tinta); color: var(--fundo); }
+  .acao:disabled { opacity: .3; cursor: default; }
+
+  .itens { padding: 16px var(--gutter); display: flex; flex-direction: column; gap: 16px; text-transform: uppercase; max-width: 560px; margin: 0 auto; }
+  .item { display: grid; grid-template-columns: 72px 1fr auto; gap: 16px; align-items: center; }
+  .item .foto svg, .item .foto img { transform: none; }
+  .total { display: flex; justify-content: space-between; border-top: 1px solid var(--tinta); padding-top: 16px; }
+
+  @media (max-width: 768px) {
+    .grade { row-gap: 24px; }
+    .foto img, .foto svg { transform: scale(.85); }
+    .detalhe { grid-template-columns: 1fr; }
+    .info { max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button class="icone" id="abrirMenu" aria-label="Menu">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 0v16M0 8h16"/></svg>
+  </button>
+  <nav class="filtros">
+    <button data-cat="principais" aria-pressed="true">PRINCIPAIS</button>
+    <button data-cat="retro" aria-pressed="false">RETRÔ</button>
+  </nav>
+  <button class="icone" id="abrirCarrinho" aria-label="Carrinho">
+    <svg width="14" height="16" viewBox="0 0 14 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 5h12v10H1z"/><path d="M4 5V3.5a3 3 0 0 1 6 0V5"/></svg>
+    <span class="contador" id="contador"></span>
+  </button>
+</header>
+
+<main>
+  <section class="grade" id="grade"></section>
+</main>
+
+<footer>
+  <a href="#">CONTATO</a>
+  <a href="/termos/">TERMOS</a>
+  <a href="/privacidade/">PRIVACIDADE</a>
+  <a href="#">ACESSIBILIDADE</a>
+  <a href="#">COOKIES</a>
+  <a href="#">STATUS DO PEDIDO</a>
+</footer>
+
+<div class="painel" id="menu">
+  <div class="topo"><span></span><button data-fechar>FECHAR</button></div>
+  <nav class="menu-links">
+    <button data-ir="principais">PRINCIPAIS</button>
+    <button data-ir="retro">RETRÔ</button>
+    <a href="#">CONTATO</a>
+    <a href="/termos/">TERMOS</a>
+    <a href="/privacidade/">PRIVACIDADE</a>
+    <a href="#">STATUS DO PEDIDO</a>
+  </nav>
+</div>
+
+<div class="painel" id="produto">
+  <div class="topo"><span></span><button data-fechar>FECHAR</button></div>
+  <div class="detalhe">
+    <div class="foto" id="detalheFoto"></div>
+    <div class="info">
+      <p id="detalheNome"></p>
+      <p id="detalhePreco"></p>
+      <div class="tamanhos" id="tamanhos"></div>
+      <button class="acao" id="adicionar" disabled>SELECIONE O TAMANHO</button>
+    </div>
+  </div>
+</div>
+
+<div class="painel" id="carrinho">
+  <div class="topo"><span>CARRINHO</span><button data-fechar>FECHAR</button></div>
+  <div class="itens" id="itens"></div>
+</div>
+
+<script>
+  // ===== CATÁLOGO =====
+  // Para trocar pelas camisas reais: preencha "imagem" com o caminho da foto
+  // (ex.: "img/flamengo-2026.png") e ajuste nome e preço.
+  // Sem "imagem", aparece uma camisa ilustrativa na cor indicada.
+  const PRODUTOS = [
+    { id: "pr-01", cat: "principais", nome: "PR-01", preco: 149.90, cor: "#111" },
+    { id: "pr-02", cat: "principais", nome: "PR-02", preco: 149.90, cor: "#c8102e" },
+    { id: "pr-03", cat: "principais", nome: "PR-03", preco: 149.90, cor: "#f2f2f2" },
+    { id: "pr-04", cat: "principais", nome: "PR-04", preco: 149.90, cor: "#0b3d91" },
+    { id: "pr-05", cat: "principais", nome: "PR-05", preco: 149.90, cor: "#1b7a3a" },
+    { id: "pr-06", cat: "principais", nome: "PR-06", preco: 149.90, cor: "#f4d000" },
+    { id: "pr-07", cat: "principais", nome: "PR-07", preco: 149.90, cor: "#5b2a86" },
+    { id: "pr-08", cat: "principais", nome: "PR-08", preco: 149.90, cor: "#7ab8e8" },
+    { id: "pr-09", cat: "principais", nome: "PR-09", preco: 149.90, cor: "#6d1a1a" },
+    { id: "rt-01", cat: "retro", nome: "RT-01", preco: 179.90, cor: "#f4d000" },
+    { id: "rt-02", cat: "retro", nome: "RT-02", preco: 179.90, cor: "#c8102e" },
+    { id: "rt-03", cat: "retro", nome: "RT-03", preco: 179.90, cor: "#111" },
+    { id: "rt-04", cat: "retro", nome: "RT-04", preco: 179.90, cor: "#f2f2f2" },
+    { id: "rt-05", cat: "retro", nome: "RT-05", preco: 179.90, cor: "#0b3d91" },
+    { id: "rt-06", cat: "retro", nome: "RT-06", preco: 179.90, cor: "#1b7a3a" },
+  ];
+  const TAMANHOS = ["P", "M", "G", "GG", "XGG"];
+
+  const $ = s => document.querySelector(s);
+  const brl = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  function camisaSVG(cor) {
+    return `<svg viewBox="0 0 200 200" aria-hidden="true"><path d="M70 22 L40 32 L10 62 L32 86 L48 72 L48 182 L152 182 L152 72 L168 86 L190 62 L160 32 L130 22 C124 36 112 42 100 42 C88 42 76 36 70 22 Z" fill="${cor}" stroke="#000" stroke-opacity=".25" stroke-width="1.5"/><path d="M70 22 C76 36 88 42 100 42 C112 42 124 36 130 22" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="3"/></svg>`;
+  }
+  const midia = p => p.imagem ? `<img src="${p.imagem}" alt="${p.nome}" loading="lazy">` : camisaSVG(p.cor);
+
+  // ===== GRADE / FILTRO =====
+  let categoria = "principais";
+  function renderGrade() {
+    $("#grade").innerHTML = PRODUTOS.filter(p => p.cat === categoria).map(p =>
+      `<article class="produto" data-id="${p.id}"><div class="foto">${midia(p)}</div><p class="rotulo">${p.nome}</p></article>`
+    ).join("");
+    document.querySelectorAll(".filtros button").forEach(b => b.setAttribute("aria-pressed", b.dataset.cat === categoria));
+  }
+  function trocarCategoria(cat) { categoria = cat; renderGrade(); fechar(); window.scrollTo(0, 0); }
+  document.querySelectorAll(".filtros button").forEach(b => b.onclick = () => trocarCategoria(b.dataset.cat));
+  document.querySelectorAll("[data-ir]").forEach(b => b.onclick = () => trocarCategoria(b.dataset.ir));
+
+  // ===== PAINÉIS =====
+  const abrir = id => { fechar(); $(id).classList.add("aberto"); document.body.style.overflow = "hidden"; };
+  function fechar() { document.querySelectorAll(".painel").forEach(p => p.classList.remove("aberto")); document.body.style.overflow = ""; }
+  document.querySelectorAll("[data-fechar]").forEach(b => b.onclick = fechar);
+  document.addEventListener("keydown", e => e.key === "Escape" && fechar());
+  $("#abrirMenu").onclick = () => abrir("#menu");
+  $("#abrirCarrinho").onclick = () => { renderCarrinho(); abrir("#carrinho"); };
+
+  // ===== PRODUTO =====
+  let atual = null, tamanho = null;
+  $("#grade").onclick = e => {
+    const card = e.target.closest(".produto");
+    if (!card) return;
+    atual = PRODUTOS.find(p => p.id === card.dataset.id); tamanho = null;
+    $("#detalheFoto").innerHTML = midia(atual);
+    $("#detalheNome").textContent = atual.nome;
+    $("#detalhePreco").textContent = brl(atual.preco);
+    $("#tamanhos").innerHTML = TAMANHOS.map(t => `<button aria-pressed="false">${t}</button>`).join("");
+    atualizarBotao();
+    abrir("#produto");
+  };
+  $("#tamanhos").onclick = e => {
+    if (e.target.tagName !== "BUTTON") return;
+    tamanho = e.target.textContent;
+    $("#tamanhos").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b === e.target));
+    atualizarBotao();
+  };
+  function atualizarBotao() {
+    $("#adicionar").disabled = !tamanho;
+    $("#adicionar").textContent = tamanho ? "ADICIONAR AO CARRINHO" : "SELECIONE O TAMANHO";
+  }
+
+  // ===== CARRINHO =====
+  let carrinho = [];
+  try { carrinho = JSON.parse(localStorage.getItem("carrinho")) || []; } catch (e) {}
+  const salvar = () => { try { localStorage.setItem("carrinho", JSON.stringify(carrinho)); } catch (e) {} atualizarContador(); };
+  const atualizarContador = () => { const n = carrinho.reduce((s, i) => s + i.qtd, 0); $("#contador").textContent = n || ""; };
+
+  $("#adicionar").onclick = () => {
+    const item = carrinho.find(i => i.id === atual.id && i.tam === tamanho);
+    item ? item.qtd++ : carrinho.push({ id: atual.id, tam: tamanho, qtd: 1 });
+    salvar(); renderCarrinho(); abrir("#carrinho");
+  };
+  function renderCarrinho() {
+    const linhas = carrinho.map((i, n) => {
+      const p = PRODUTOS.find(x => x.id === i.id);
+      if (!p) return "";
+      return `<div class="item"><div class="foto">${midia(p)}</div><div>${p.nome}<br>TAM. ${i.tam} × ${i.qtd}<br>${brl(p.preco * i.qtd)}</div><button data-rem="${n}">REMOVER</button></div>`;
+    }).join("");
+    const total = carrinho.reduce((s, i) => s + (PRODUTOS.find(x => x.id === i.id)?.preco || 0) * i.qtd, 0);
+    $("#itens").innerHTML = carrinho.length
+      ? `${linhas}<div class="total"><span>TOTAL</span><span>${brl(total)}</span></div><button class="acao">FINALIZAR COMPRA</button>`
+      : `<p>SEU CARRINHO ESTÁ VAZIO</p>`;
+  }
+  $("#itens").onclick = e => {
+    const n = e.target.dataset.rem;
+    if (n === undefined) return;
+    carrinho.splice(+n, 1); salvar(); renderCarrinho();
+  };
+
+  renderGrade(); atualizarContador();
+</script>
+</body>
+</html>
