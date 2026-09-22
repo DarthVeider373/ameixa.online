@@ -51,7 +51,8 @@
   .tamanhos { display: flex; gap: 8px; }
   .tamanhos button { min-width: 44px; height: 36px; border: 1px solid var(--tinta); }
   .tamanhos button[aria-pressed="true"] { background: var(--tinta); color: var(--fundo); }
-  .acao { height: 44px; border: 1px solid var(--tinta); text-transform: uppercase; }
+  .acao { height: 44px; border: 1px solid var(--tinta); text-transform: uppercase;
+    display: flex; align-items: center; justify-content: center; }
   .acao:hover, .acao:disabled { background: var(--tinta); color: var(--fundo); }
   .acao:disabled { opacity: .3; cursor: default; }
 
@@ -90,12 +91,7 @@
 </main>
 
 <footer>
-  <a href="#">CONTATO</a>
-  <a href="/termos/">TERMOS</a>
-  <a href="/privacidade/">PRIVACIDADE</a>
-  <a href="#">ACESSIBILIDADE</a>
-  <a href="#">COOKIES</a>
-  <a href="#">STATUS DO PEDIDO</a>
+  <a href="#" id="contato">CONTATO</a>
 </footer>
 
 <div class="painel" id="menu">
@@ -103,10 +99,7 @@
   <nav class="menu-links">
     <button data-ir="principais">PRINCIPAIS</button>
     <button data-ir="retro">RETRÔ</button>
-    <a href="#">CONTATO</a>
-    <a href="/termos/">TERMOS</a>
-    <a href="/privacidade/">PRIVACIDADE</a>
-    <a href="#">STATUS DO PEDIDO</a>
+    <a href="#" id="contatoMenu">CONTATO</a>
   </nav>
 </div>
 
@@ -118,7 +111,7 @@
       <p id="detalheNome"></p>
       <p id="detalhePreco"></p>
       <div class="tamanhos" id="tamanhos"></div>
-      <button class="acao" id="adicionar" disabled>SELECIONE O TAMANHO</button>
+      <a class="acao" id="whatsapp" href="#" target="_blank" rel="noopener">FALE CONOSCO NO WHATSAPP</a>
     </div>
   </div>
 </div>
@@ -147,6 +140,11 @@
     { id: "rt-06", cat: "retro", nome: "RT-06", preco: 179.90, cor: "#1b7a3a" },
   ];
   const TAMANHOS = ["P", "M", "G", "GG", "XGG"];
+
+  // ===== WHATSAPP =====
+  // Número com DDI + DDD, só dígitos (ex.: "5531999999999").
+  const WHATSAPP = "5500000000000";
+  const linkWhatsApp = texto => `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(texto)}`;
 
   const $ = s => document.querySelector(s);
   const brl = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -186,19 +184,23 @@
     $("#detalheNome").textContent = atual.nome;
     $("#detalhePreco").textContent = brl(atual.preco);
     $("#tamanhos").innerHTML = TAMANHOS.map(t => `<button aria-pressed="false">${t}</button>`).join("");
-    atualizarBotao();
+    atualizarWhatsApp();
     abrir("#produto");
   };
   $("#tamanhos").onclick = e => {
     if (e.target.tagName !== "BUTTON") return;
     tamanho = e.target.textContent;
     $("#tamanhos").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b === e.target));
-    atualizarBotao();
+    atualizarWhatsApp();
   };
-  function atualizarBotao() {
-    $("#adicionar").disabled = !tamanho;
-    $("#adicionar").textContent = tamanho ? "ADICIONAR AO CARRINHO" : "SELECIONE O TAMANHO";
+  function atualizarWhatsApp() {
+    const texto = `Olá! Tenho interesse na camisa ${atual.nome}` + (tamanho ? `, tamanho ${tamanho}.` : ".");
+    $("#whatsapp").href = linkWhatsApp(texto);
   }
+  ["#contato", "#contatoMenu"].forEach(id => {
+    $(id).href = linkWhatsApp("Olá! Vim pelo site e queria tirar uma dúvida.");
+    $(id).target = "_blank"; $(id).rel = "noopener";
+  });
 
   // ===== CARRINHO =====
   let carrinho = [];
@@ -206,11 +208,6 @@
   const salvar = () => { try { localStorage.setItem("carrinho", JSON.stringify(carrinho)); } catch (e) {} atualizarContador(); };
   const atualizarContador = () => { const n = carrinho.reduce((s, i) => s + i.qtd, 0); $("#contador").textContent = n || ""; };
 
-  $("#adicionar").onclick = () => {
-    const item = carrinho.find(i => i.id === atual.id && i.tam === tamanho);
-    item ? item.qtd++ : carrinho.push({ id: atual.id, tam: tamanho, qtd: 1 });
-    salvar(); renderCarrinho(); abrir("#carrinho");
-  };
   function renderCarrinho() {
     const linhas = carrinho.map((i, n) => {
       const p = PRODUTOS.find(x => x.id === i.id);
